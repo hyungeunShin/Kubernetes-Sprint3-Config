@@ -19,7 +19,7 @@ pipeline {
     stages {
         stage('소스파일 체크아웃') {
             steps {
-                git branch: "main", url: "${APP_GITHUB_URL}"
+                git branch: "${APP_VERSION}", url: "${APP_GITHUB_URL}"
             }
         }
 
@@ -54,17 +54,7 @@ pipeline {
             steps {
                 // DockerHub로 이미지 업로드
                 script{
-                    withCredentials([usernamePassword(credentialsId: 'docker_password', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
-                        sh "echo " + '${PASSWORD}' + " | docker login -u " + '${USERNAME}' + " --password-stdin"
-                    }
-
                     sh "docker push ${DOCKERHUB_USERNAME}/api-tester:${APP_VERSION}"
-                }
-            }
-
-            post {
-                always {
-                    sh "docker logout"
                 }
             }
         }
@@ -72,17 +62,15 @@ pipeline {
         stage('쿠버네티스 배포') {
             steps {
                 // K8S 배포
-                withCredentials([file(credentialsId: 'k8s_master_config', variable: 'KUBECONFIG')]) {
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/namespace.yaml"
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/configmap.yaml"
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/secret.yaml"
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/service.yaml"
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/serviceaccount.yaml"
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/secret-token.yaml"
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/role.yaml"
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/rolebinding.yaml"
-                    sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/deployment.yaml"
-                }
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/namespace.yaml"
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/configmap.yaml"
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/secret.yaml"
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/service.yaml"
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/serviceaccount.yaml"
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/secret-token.yaml"
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/role.yaml"
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/rolebinding.yaml"
+                sh "kubectl apply -f ./${CLASS_NUM}/deploy/k8s/deployment.yaml"
             }
         }
     }
