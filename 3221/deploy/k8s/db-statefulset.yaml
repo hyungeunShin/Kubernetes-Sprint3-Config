@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: anotherclass-322
+  name: database
+  labels:
+    part-of: k8s-anotherclass
+    component: database
+    name: database
+    instance: database
+    version: 3.0.0
+    managed-by: kubectl
+spec:
+  selector:
+    matchLabels:
+      part-of: k8s-anotherclass
+      component: database
+      name: database
+      instance: database
+  replicas: 2
+  # 이 속성이 꼭 들어가야 Pod 명으로 DNS 조회가 가능함
+  serviceName: database-headless
+  template:
+    metadata:
+      labels:
+        part-of: k8s-anotherclass
+        component: database
+        name: database
+        instance: database
+        version: 3.0.0
+    spec:
+      containers:
+        - name: database
+          image: gusrms0978/api-tester:3.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: api-tester-3221-properties
+          startupProbe:
+            httpGet:
+              path: "/startup"
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: "/readiness"
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: "/liveness"
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: secret-datasource
+              mountPath: /usr/src/myapp/datasource
+      volumes:
+        - name: secret-datasource
+          secret:
+            secretName: api-tester-3221-postgresql
