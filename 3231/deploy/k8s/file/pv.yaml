@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: shared-volume-3231
+  labels:
+    part-of: k8s-anotherclass
+    component: backend-server
+    name: api-tester
+    instance: application-3231
+spec:
+  capacity:
+    storage: 1G
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: /file-storage
+    server: 192.168.56.20
